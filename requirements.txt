@@ -1,0 +1,11 @@
+pandas
+numpy
+requests
+openpyxl
+matplotlib
+seaborn
+scipy
+statsmodels
+jupyter
+pysus
+geopandas
