@@ -40,16 +40,49 @@ FATEC, mesmo sendo agregado).
 Fornecido por você (IDHM municipal, valores compatíveis com IDHM 2010 do
 Atlas Brasil — ex.: São Caetano do Sul 0,862 bate com o valor oficial).
 
-⚠️ **Cobertura parcial:** o arquivo tem apenas **260 dos 645 municípios de
-SP**. Isso significa que, na análise estadual (Nível 1, notebook 04), ~385
-municípios ficarão sem IDH e cairão fora da regressão que usa essa
-variável como controle (ou entrarão com `NaN`, dependendo de como
-`statsmodels` trata valores ausentes — por padrão, remove essas linhas).
-Duas opções, para decidirmos juntas quando chegarmos nessa etapa:
-1. Seguir só com os 260 municípios que têm IDH (amostra menor, mas válida)
+⚠️ **Cobertura parcial:** o arquivo tem 260 linhas, mas só **259 são
+municípios de SP que batem com o Censo** — a linha "Guaxupé" não é
+município de São Paulo (é de Minas Gerais), provavelmente um erro no
+arquivo de origem, e fica de fora do cruzamento sem problema. Isso
+significa que, na análise estadual (Nível 1, notebook 04), ~386 municípios
+ficam sem IDH e entram como `NaN` — a regressão do `statsmodels` descarta
+essas linhas automaticamente (n efetivo da regressão: 259). Duas opções,
+para decidirmos juntas se isso incomodar:
+1. Seguir só com os 259 municípios que têm IDH (amostra menor, mas válida)
 2. Completar o arquivo baixando o restante do Atlas Brasil
 
-## Tabela 9605 do SIDRA (`tabela9605_Rio_Claro.csv`, `tabela9605_s_o_Paulo.csv`)
+## Tabela 9879 do SIDRA (`tabela9879_domicilios_sp.csv`) — idosos morando sozinhos
+
+**Esta é a tabela certa, e já está integrada.** "Domicílios particulares,
+por espécie de unidade doméstica, número de moradores, segundo sexo, cor ou
+raça e grupos de idade da pessoa responsável pelo domicílio" — Censo 2022,
+SP, filtrada para "Total" (todas as cores/raças) e recortada por "Total" x
+"60 anos ou mais" (grupo de idade do responsável) e "Total" x "Unipessoal"
+(espécie de unidade doméstica).
+
+**O que cada coluna mede:**
+- `domicilios_resp_idoso` = nº de domicílios cujo responsável tem 60+ anos.
+  É um proxy do nº de idosos "responsáveis por domicílio" — **não** é o
+  total de idosos do município (um idoso que mora na casa de um filho, por
+  exemplo, não conta aqui).
+- `idosos_sozinhos` = desses, quantos são domicílios **unipessoais**. Por
+  definição, domicílio unipessoal = 1 morador = o próprio responsável
+  morando sozinho — esse número é exato, não é proxy.
+
+**Validação feita:** a soma de `domicilios_total`, `domicilios_resp_idoso`
+e `idosos_sozinhos` nos 645 municípios bate exatamente com os totais do
+estado de SP impressos no próprio arquivo (16.241.500 / 4.592.203 /
+1.336.761). Cobre os 645 municípios (nenhum de fora, diferente do SIH e do
+IDH).
+
+**Como ela se cruza com o SIH e o IDH:** por nome de município normalizado
+(ver `config.normalizar_municipio`), não por código — nenhuma fonte real
+traz um código comum utilizável sem a lista oficial de códigos do IBGE, que
+não conseguimos baixar aqui (sem internet neste ambiente). Validado: 326
+dos 327 municípios do SIH batem direto com esta tabela (a exceção,
+"São Luís" vs "São Luiz" do Paraitinga, tratada em `config.ALIASES_MUNICIPIO`).
+
+## Tabela 9605 do SIDRA (`tabela9605_Rio_Claro.csv`, `tabela9605_s_o_Paulo.csv`) — histórico, não usada
 
 **Não é a tabela certa para "idosos morando sozinhos".** Ela traz
 "População residente, por cor ou raça" — só o total de população, sem

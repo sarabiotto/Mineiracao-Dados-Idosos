@@ -4,6 +4,8 @@ Todos os notebooks importam este módulo (via `sys.path.append("../src")`)
 para não duplicar caminhos de pasta, códigos de município e listas de CID-10
 em cinco lugares diferentes.
 """
+import re
+import unicodedata
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -26,19 +28,46 @@ for _dir in (DATA_RAW, DATA_EXTERNAL, DATA_PROCESSED, OUTPUTS_FIGURES, OUTPUTS_T
 # ---------------------------------------------------------------------------
 UF_SIGLA = "SP"
 UF_CODIGO_IBGE = 35            # código IBGE de 2 dígitos do estado de São Paulo
-RIO_CLARO_CODIGO_IBGE = 3543907  # código IBGE de 7 dígitos de Rio Claro/SP
+RIO_CLARO_CODIGO_IBGE = 3543907  # código IBGE de 7 dígitos de Rio Claro/SP (informativo/citação)
+RIO_CLARO_CODIGO_DATASUS = str(RIO_CLARO_CODIGO_IBGE)[:6]  # "354390" (informativo/citação)
 RIO_CLARO_NOME = "Rio Claro"
-
-# O DATASUS costuma usar o código de município com 6 dígitos (o código IBGE
-# de 7 dígitos sem o dígito verificador final). Guardamos os dois porque
-# vamos precisar cruzar IBGE (7 dígitos) com DATASUS (6 dígitos) no notebook 03.
-RIO_CLARO_CODIGO_DATASUS = str(RIO_CLARO_CODIGO_IBGE)[:6]  # "354390"
 
 
 def codigo_ibge_para_datasus(codigo_ibge_7: int | str) -> str:
     """Converte um código IBGE de 7 dígitos no código de 6 dígitos usado pelo DATASUS
     (remove o último dígito, que é o dígito verificador)."""
     return str(codigo_ibge_7)[:6]
+
+# ---------------------------------------------------------------------------
+# Cruzamento de bases por NOME de município (não por código)
+#
+# Nenhuma das fontes reais que conseguimos (SIH/TabNet, Censo/SIDRA, IDH)
+# traz o código IBGE de 7 dígitos diretamente utilizável entre si sem uma
+# lista oficial de códigos — e não temos acesso à internet neste ambiente
+# para baixar essa lista (API do IBGE). Por isso o pipeline cruza tudo pelo
+# NOME do município, normalizado (maiúsculas, sem acento, sem sufixo "(SP)").
+# Validado: 326 de 327 municípios do SIH batem com o Censo (a exceção é
+# "SAO LUIS DO PARAITINGA", grafia alternativa de "São Luiz do Paraitinga",
+# tratada em ALIASES_MUNICIPIO) e 259 de 260 do IDH (a exceção,
+# "Guaxupé", nem é município de SP — é de MG, aparentemente um erro no
+# arquivo de origem, e por isso fica de fora sem problema).
+# ---------------------------------------------------------------------------
+ALIASES_MUNICIPIO = {
+    "SAO LUIS DO PARAITINGA": "SAO LUIZ DO PARAITINGA",
+}
+
+
+def normalizar_municipio(nome: str) -> str:
+    """Normaliza um nome de município para cruzar bases de fontes diferentes:
+    maiúsculas, sem acento, sem sufixo '(SP)', sem espaços duplicados."""
+    if not isinstance(nome, str):
+        return ""
+    nome = nome.strip()
+    nome = re.sub(r"\s*\(SP\)\s*$", "", nome, flags=re.IGNORECASE)
+    nome = unicodedata.normalize("NFKD", nome).encode("ascii", "ignore").decode("ascii")
+    nome = nome.upper().strip()
+    nome = re.sub(r"\s+", " ", nome)
+    return ALIASES_MUNICIPIO.get(nome, nome)
 
 # ---------------------------------------------------------------------------
 # Recorte temporal
