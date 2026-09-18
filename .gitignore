@@ -228,6 +228,7 @@ data/processed/*
 !data/raw/.gitkeep
 !data/external/.gitkeep
 !data/external/README.md
+!data/external/FONTES_RIO_CLARO.md
 !data/processed/.gitkeep
 
 # Saídas geradas pelos notebooks (reproduzíveis) - não versionar
