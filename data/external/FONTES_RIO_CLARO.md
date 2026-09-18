@@ -59,6 +59,46 @@ município individual. Por isso o valor de Rio Claro nela (231.860) não bate
 com a população do município isoladamente (201.418, conforme o ofício da
 Prefeitura) — é a população de toda a aglomeração urbana.
 
-Esses dois arquivos não foram incorporados ao pipeline. Ver próximos passos
-no README principal sobre como achar a tabela certa (arranjo domiciliar
-unipessoal por idade, nível município).
+Esses arquivos não foram incorporados ao pipeline (chegaram duas vezes —
+mesma tabela, mesmo problema). Ver próximos passos no README principal
+sobre como achar a tabela certa (arranjo domiciliar unipessoal por idade,
+nível município).
+
+## `sih_lesoes_sp.csv`, `sih_sintomas_sp.csv`, `sih_transtornos_mentais_sp.csv`
+
+Exportados do **TabNet/DATASUS** (SIH/SUS — Morbidade Hospitalar do SUS por
+local de internação, SP), um arquivo por **capítulo da CID-10**, filtrado
+para idosos (faixas etárias 60-69, 70-79, 80+), período Jan/2022-Jul/2026:
+
+| Arquivo | Capítulo CID-10 |
+|---|---|
+| `sih_lesoes_sp.csv` | XIX — Lesões e algumas outras consequências de causas externas |
+| `sih_sintomas_sp.csv` | XVIII — Sintomas, sinais e achados anormais clínicos e laboratoriais |
+| `sih_transtornos_mentais_sp.csv` | V — Transtornos mentais e comportamentais |
+
+**Por que capítulo, e não subcategoria:** o TabNet não oferece filtro fino
+o bastante para pedir só W00-W19 (quedas) ou só S72 (fratura de fêmur)
+direto na interface — o filtro "Lista Morb. CID-10" só desce até capítulo
+nesse formulário. Por isso as causas do estudo (quedas, fratura de fêmur,
+síncope, confusão mental) ficaram **embutidas em capítulos mais largos**:
+- Quedas + fratura de fêmur → dentro do capítulo XIX (que também inclui
+  outras lesões/intoxicações não relacionadas)
+- Síncope + confusão mental → dentro do capítulo XVIII (que também inclui
+  outros sintomas mal definidos — capítulo às vezes usado na literatura
+  como proxy de diagnóstico tardio/impreciso, o que reforça a hipótese)
+- Delirium → dentro do capítulo V (o mais largo dos três — inclui
+  transtornos por uso de substâncias, esquizofrenia etc., sem relação
+  direta com isolamento)
+
+**Formato do arquivo:** TabNet exporta em **Latin-1**, separado por `;`,
+com linhas de metadado antes da tabela e notas de rodapé depois — não dá
+pra ler direto com `pd.read_csv`. O parser testado está no notebook 02.
+
+**Mudança no recorte temporal:** o plano original era 2019-2022; esse dado
+real cobre 2022-2026 (2026 parcial, até julho, dados provisórios segundo o
+próprio TabNet). `config.ANOS_SIH` já reflete isso.
+
+**Validação feita:** a soma de cada arquivo bate exatamente com o "Total"
+impresso no rodapé do próprio CSV (349.379 / 109.034 / 29.129), e os
+valores de Rio Claro (código DATASUS 354390) foram conferidos linha a
+linha.
