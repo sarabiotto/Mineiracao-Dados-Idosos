@@ -216,3 +216,22 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ---------------------------------------------------------------------------
+# Projeto: Mineiração de Dados - Idosos
+# ---------------------------------------------------------------------------
+# Dados brutos, baixados manualmente ou pelos notebooks - não versionar
+# (arquivos grandes e/ou reproduzíveis a partir do código)
+data/raw/*
+data/external/*
+data/processed/*
+!data/raw/.gitkeep
+!data/external/.gitkeep
+!data/external/README.md
+!data/processed/.gitkeep
+
+# Saídas geradas pelos notebooks (reproduzíveis) - não versionar
+outputs/figures/*
+outputs/tables/*
+!outputs/figures/.gitkeep
+!outputs/tables/.gitkeep
