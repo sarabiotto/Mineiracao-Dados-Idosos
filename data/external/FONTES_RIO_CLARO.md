@@ -97,17 +97,49 @@ mesma tabela, mesmo problema). Ver próximos passos no README principal
 sobre como achar a tabela certa (arranjo domiciliar unipessoal por idade,
 nível município).
 
-## `sih_lesoes_sp.csv`, `sih_sintomas_sp.csv`, `sih_transtornos_mentais_sp.csv`
+## `sih_residencia_*.csv` — a fonte SIH em uso
 
-Exportados do **TabNet/DATASUS** (SIH/SUS — Morbidade Hospitalar do SUS por
-local de internação, SP), um arquivo por **capítulo da CID-10**, filtrado
+Exportados do **TabNet/DATASUS** (SIH/SUS — Morbidade Hospitalar do SUS **por
+local de residência**, SP), um arquivo por **capítulo da CID-10**, filtrado
 para idosos (faixas etárias 60-69, 70-79, 80+), período Jan/2022-Jul/2026:
 
-| Arquivo | Capítulo CID-10 |
-|---|---|
-| `sih_lesoes_sp.csv` | XIX — Lesões e algumas outras consequências de causas externas |
-| `sih_sintomas_sp.csv` | XVIII — Sintomas, sinais e achados anormais clínicos e laboratoriais |
-| `sih_transtornos_mentais_sp.csv` | V — Transtornos mentais e comportamentais |
+| Arquivo | Capítulo CID-10 | Total (rodapé do CSV) |
+|---|---|---|
+| `sih_residencia_lesoes_sp.csv` | XIX — Lesões e algumas outras consequências de causas externas | 350.018 |
+| `sih_residencia_sintomas_sp.csv` | XVIII — Sintomas, sinais e achados anormais clínicos e laboratoriais | 108.899 |
+| `sih_residencia_tmentais_sp.csv` | V — Transtornos mentais e comportamentais | 29.100 |
+
+Seleção no TabNet: Linha = `Município`, Coluna = `Não ativa`, Conteúdo =
+`Internações`, na página "Morbidade Hospitalar do SUS — **por local de
+residência** — São Paulo".
+
+### ⚠️ Correção metodológica: residência × internação
+
+A primeira coleta usou, por engano, a página "por local de **internação**" —
+que conta a internação no município do *hospital*, não no do *paciente*. Isso
+invalidava o cruzamento geográfico do estudo inteiro (a hipótese é sobre o
+idoso que mora sozinho *naquele* município). Os arquivos foram re-exportados
+por residência. Efeito medido:
+
+| | por local de internação | por local de residência |
+|---|---|---|
+| Municípios com ≥1 internação | ~313 de 645 | **645 de 645** |
+| Total de internações no estado | 487.542 | 488.017 |
+| Pariquera-Açu | 2.088 | 300 (estava **7x** inflado) |
+| Presidente Prudente | 7.881 | 3.057 |
+| São José do Rio Preto | 14.490 | 6.477 |
+| Poá | 0 | 797 |
+| Peruíbe | 0 | 781 |
+
+O total do estado praticamente não muda — é a mesma população de internações
+—, mas a **distribuição entre municípios muda completamente**, que é
+exatamente o que o estudo mede. Municípios-polo em saúde apareciam inflados
+por atenderem a região; municípios sem hospital apareciam com zero.
+**Reportar essa correção na Metodologia do artigo.**
+
+Os arquivos antigos (`sih_lesoes_sp.csv`, `sih_sintomas_sp.csv`,
+`sih_transtornos_mentais_sp.csv`) ficam guardados só como base dessa
+comparação — nenhum notebook os lê.
 
 **Por que capítulo, e não subcategoria:** o TabNet não oferece filtro fino
 o bastante para pedir só W00-W19 (quedas) ou só S72 (fratura de fêmur)
@@ -128,10 +160,17 @@ com linhas de metadado antes da tabela e notas de rodapé depois — não dá
 pra ler direto com `pd.read_csv`. O parser testado está no notebook 02.
 
 **Mudança no recorte temporal:** o plano original era 2019-2022; esse dado
-real cobre 2022-2026 (2026 parcial, até julho, dados provisórios segundo o
-próprio TabNet). `config.ANOS_SIH` já reflete isso.
+real cobre Jan/2022-Jul/2026 (os últimos seis meses são provisórios, segundo
+nota do próprio TabNet). `config.PERIODO_SIH` reflete isso.
+
+**Sem quebra por ano:** estes exports trazem o **total acumulado** do período
+(uma única coluna "Internações"), porque a consulta foi feita com Coluna =
+`Não ativa`. Por isso o estudo trabalha com totais por município e não tem
+análise de série temporal. Para recuperá-la, bastaria re-exportar com
+**Coluna = "Ano processamento"** (o resto da seleção é igual).
 
 **Validação feita:** a soma de cada arquivo bate exatamente com o "Total"
-impresso no rodapé do próprio CSV (349.379 / 109.034 / 29.129), e os
-valores de Rio Claro (código DATASUS 354390) foram conferidos linha a
-linha.
+impresso no rodapé do próprio CSV (350.018 / 108.899 / 29.100), e o
+cruzamento por nome cobre os 645 municípios do Censo — o único ajuste de
+grafia ("São Luís" vs. "São Luiz" do Paraitinga) está em
+`config.ALIASES_MUNICIPIO`.

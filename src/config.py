@@ -46,9 +46,9 @@ def codigo_ibge_para_datasus(codigo_ibge_7: int | str) -> str:
 # lista oficial de códigos — e não temos acesso à internet neste ambiente
 # para baixar essa lista (API do IBGE). Por isso o pipeline cruza tudo pelo
 # NOME do município, normalizado (maiúsculas, sem acento, sem sufixo "(SP)").
-# Validado: 326 de 327 municípios do SIH batem com o Censo (a exceção é
+# Validado: todos os municípios do SIH batem com o Censo, exceto
 # "SAO LUIS DO PARAITINGA", grafia alternativa de "São Luiz do Paraitinga",
-# tratada em ALIASES_MUNICIPIO) e 259 de 260 do IDH (a exceção,
+# tratada em ALIASES_MUNICIPIO; e 259 de 260 do IDH (a exceção,
 # "Guaxupé", nem é município de SP — é de MG, aparentemente um erro no
 # arquivo de origem, e por isso fica de fora sem problema).
 # ---------------------------------------------------------------------------
@@ -73,12 +73,17 @@ def normalizar_municipio(nome: str) -> str:
 # Recorte temporal
 #
 # O plano original era 2019-2022. Os dados reais do SIH que conseguimos via
-# TabNet vieram para 2022-2026 (ver data/external/FONTES_RIO_CLARO.md) — o
-# recorte temporal do estudo mudou para acompanhar o dado disponível. 2026
-# está incompleto (até julho, dados provisórios segundo o próprio TabNet).
+# TabNet cobrem Jan/2022 a Jul/2026 (ver data/external/FONTES_RIO_CLARO.md) —
+# o recorte mudou para acompanhar o dado disponível. Jul/2026 é o último mês
+# publicado e os últimos seis meses são provisórios (sujeitos a atualização,
+# conforme nota do próprio TabNet).
+#
+# Os arquivos atuais trazem o TOTAL acumulado do período (uma coluna
+# "Internações"), sem quebra por ano — por isso o pipeline trabalha com
+# totais por município, não com série temporal.
 # ---------------------------------------------------------------------------
-ANOS_SIH = [2022, 2023, 2024, 2025, 2026]   # anos de internação disponíveis no SIH/SUS (2026 parcial)
-ANO_CENSO = 2022                             # ano do Censo Demográfico usado como referência
+PERIODO_SIH = "Jan/2022-Jul/2026"   # recorte coberto pelos exports do TabNet
+ANO_CENSO = 2022                    # ano do Censo Demográfico usado como referência
 
 # Estatuto do Idoso (Lei 10.741/2003), art. 1º
 IDADE_MINIMA_IDOSO = 60

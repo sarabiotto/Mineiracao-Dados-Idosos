@@ -11,7 +11,8 @@ arquivos daqui pelo nome exato indicado.
 | `cadunico_rio_claro.csv` | ✅ já temos — Ofício SMDS nº 2235/2026, Prefeitura de Rio Claro | Notebook 05, seção 5.4 |
 | `censo_rio_claro_historico.csv` | ✅ já temos — mesmo ofício, população/idosos 1970-2022 | Notebook 05, seção 5.5 |
 | `2026-09-14_..._FATEC_IA_assinado.pdf` | ✅ já temos — ofício original (fonte dos dois arquivos acima) | referência/citação |
-| `sih_lesoes_sp.csv`, `sih_sintomas_sp.csv`, `sih_transtornos_mentais_sp.csv` | ✅ já temos — TabNet, 2022-2026, um por capítulo CID-10 (ver `FONTES_RIO_CLARO.md`) | Notebook 02 (caminho principal, já testado) |
+| `sih_residencia_lesoes_sp.csv`, `sih_residencia_sintomas_sp.csv`, `sih_residencia_tmentais_sp.csv` | ✅ já temos — TabNet **por local de residência**, Jan/2022-Jul/2026, um por capítulo CID-10 (ver `FONTES_RIO_CLARO.md`) | Notebook 02 (caminho principal, já testado) |
+| `sih_lesoes_sp.csv`, `sih_sintomas_sp.csv`, `sih_transtornos_mentais_sp.csv` | ⚠️ **superados** — mesma consulta, mas por local de **internação** (hospital). Mantidos só para a comparação documentada em `FONTES_RIO_CLARO.md` | nenhum notebook lê mais |
 | `sp_municipios.zip` | https://geoftp.ibge.gov.br/organizacao_do_territorio/malhas_territoriais/malhas_municipais/municipio_2022/UFs/SP/SP_Municipios_2022.zip | Notebook 04 (mapa — opcional) |
 | `esf_sp.csv` | https://egestorab.saude.gov.br → Cobertura AB → SP → 2022 → exportar CSV | Opcional — variável de controle adicional, ainda não usada nos notebooks |
 
