@@ -60,21 +60,40 @@ correspondência muito alta (326/327 no SIH, 259/260 no IDH; ver
    |---|---|---|
    | `01_coleta_ibge_censo.ipynb` | Idosos sozinhos por município (Censo 2022, tabela 9879) | `censo_domicilios_sp.csv` |
    | `02_coleta_datasus_sih.ipynb` | Internações de idosos por capítulo CID-10 (SIH/SUS) | `internacoes_sp.csv` |
-   | `03_integracao_limpeza.ipynb` | Junta tudo por nome de município; gera painel (por ano) e base agregada (por município) | `dataset_consolidado_sp.csv`, `dataset_municipios_sp.csv` |
-   | `04_analise_estatistica.ipynb` | Correlação, regressão (nível município, n=645), mapa opcional | figuras + `regressao_ols.txt` |
+   | `03_integracao_limpeza.ipynb` | Junta tudo por nome de município; gera painel, base agregada e base **limpa** (outliers e municípios sem IDH removidos) | `dataset_consolidado_sp.csv`, `dataset_municipios_sp_bruto.csv`, `dataset_municipios_sp.csv` |
+   | `04_analise_estatistica.ipynb` | Correlação, regressão (nível município, n≈240 após limpeza), checagem de robustez, mapa opcional | figuras + `regressao_ols.txt` |
    | `05_estudo_caso_rio_claro.ipynb` | Comparação, projeção e perfil socioeconômico — Rio Claro | figuras |
 
 Todos os arquivos de entrada já estão descritos em
 [`data/external/README.md`](data/external/README.md).
 
-## Um ponto metodológico importante (notebook 04)
+## Dois pontos metodológicos importantes (notebook 03/04)
 
-`pct_idosos_sozinhos` vem do Censo 2022 — é **constante ao longo dos 5 anos**
-de cada município. Testar a hipótese no painel (3.225 linhas, 5 por
-município) infla o "n" artificialmente
+**Pseudorreplicação:** `pct_idosos_sozinhos` vem do Censo 2022 — é
+**constante ao longo dos 5 anos** de cada município. Testar a hipótese no
+painel (3.225 linhas, 5 por município) infla o "n" artificialmente
 ([pseudorreplicação](https://en.wikipedia.org/wiki/Pseudoreplication)). Por
-isso a hipótese é testada em `dataset_municipios_sp.csv` (645 linhas, uma
-por município) — o painel serve só para gráficos de evolução temporal.
+isso a hipótese é testada na base por município (uma linha por município) —
+o painel serve só para gráficos de evolução temporal.
+
+**Limpeza (notebook 03, seção 3.5):** a base por município passa por três
+tratamentos antes de virar `dataset_municipios_sp.csv`:
+1. Arredondamento das taxas (2 casas decimais — sem perda de informação real)
+2. Remoção de outliers na taxa de internação pela regra de Tukey (acima de
+   Q3 + 1,5×IQR) — 19 municípios. Não é ruído aleatório: os removidos são,
+   em maioria, cidades-polo regionais em saúde (Presidente Prudente,
+   Botucatu, Jaú...), consistente com a suspeita de que o SIH que temos é
+   "por local de internação" (hospital), não "por local de residência"
+   (paciente) — ver `FONTES_RIO_CLARO.md`.
+3. Remoção de municípios sem IDH (377) — decisão de eliminar em vez de
+   imputar, já que ~60% da coluna está ausente e não há fonte confiável de
+   IDH por município vizinho disponível aqui para imputar com critério.
+
+Isso reduz a base de 645 para **240 municípios**. A versão sem esses
+filtros fica salva em `dataset_municipios_sp_bruto.csv`, e o notebook 04
+(seção 4.2b) compara os resultados com e sem a limpeza como checagem de
+robustez — o resultado muda de forma relevante (ver seção de Resultados),
+o que é em si um achado sobre a qualidade do dado disponível.
 
 ## Como trabalhar nisso comigo
 
@@ -111,10 +130,16 @@ outputs/
 - O recorte temporal do SIH é 2022-2026 (2026 parcial, até julho), não
   2019-2022 como no plano original — mudou para acompanhar o dado real
   disponível.
-- O IDH cobre 259 dos 645 municípios — a regressão do notebook 04 roda com
-  esse n efetivo.
+- O IDH cobre 259 dos 645 municípios — depois da limpeza (outliers + IDH
+  ausente), a análise principal roda com n≈240.
 - O IDH usado é o mais recente disponível fornecido (IDHM 2010, Atlas
   Brasil) — o Censo 2022 ainda não tem IDHM oficial publicado.
+- **Resultado principal, honesto:** na base limpa, nem a correlação simples
+  nem o coeficiente de `pct_idosos_sozinhos` na regressão são
+  estatisticamente significativos (ver notebook 04, seção 4.3). O achado
+  "quase significativo" que aparecia na base bruta não se sustenta depois
+  da limpeza — reportar os dois resultados (bruto e limpo) no artigo como
+  checagem de robustez, não só o mais favorável.
 - O CadÚnico (Nível 2, Rio Claro) cobre apenas famílias de baixa renda —
   qualquer conclusão baseada nele vale para "idosos em situação de
   vulnerabilidade socioeconômica em Rio Claro", não para todos os idosos do
