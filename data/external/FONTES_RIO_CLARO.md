@@ -97,7 +97,7 @@ mesma tabela, mesmo problema). Ver próximos passos no README principal
 sobre como achar a tabela certa (arranjo domiciliar unipessoal por idade,
 nível município).
 
-## `sih_residencia_*.csv` — a fonte SIH em uso
+## `sih_ano_*.csv` — a fonte SIH em uso
 
 Exportados do **TabNet/DATASUS** (SIH/SUS — Morbidade Hospitalar do SUS **por
 local de residência**, SP), um arquivo por **capítulo da CID-10**, filtrado
@@ -105,13 +105,22 @@ para idosos (faixas etárias 60-69, 70-79, 80+), período Jan/2022-Jul/2026:
 
 | Arquivo | Capítulo CID-10 | Total (rodapé do CSV) |
 |---|---|---|
-| `sih_residencia_lesoes_sp.csv` | XIX — Lesões e algumas outras consequências de causas externas | 350.018 |
-| `sih_residencia_sintomas_sp.csv` | XVIII — Sintomas, sinais e achados anormais clínicos e laboratoriais | 108.899 |
-| `sih_residencia_tmentais_sp.csv` | V — Transtornos mentais e comportamentais | 29.100 |
+| `sih_ano_lesoes_sp.csv` | XIX — Lesões e algumas outras consequências de causas externas | 350.018 |
+| `sih_ano_sintomas_sp.csv` | XVIII — Sintomas, sinais e achados anormais clínicos e laboratoriais | 108.899 |
+| `sih_ano_tmentais_sp.csv` | V — Transtornos mentais e comportamentais | 29.100 |
 
-Seleção no TabNet: Linha = `Município`, Coluna = `Não ativa`, Conteúdo =
-`Internações`, na página "Morbidade Hospitalar do SUS — **por local de
-residência** — São Paulo".
+Seleção no TabNet: Linha = `Município`, Coluna = `Ano processamento`,
+Conteúdo = `Internações`, faixas etárias 60-69 / 70-79 / 80+, na página
+"Morbidade Hospitalar do SUS — **por local de residência** — São Paulo".
+
+⚠️ **Confira o capítulo pelo conteúdo, não pelo nome do arquivo.** Numa das
+exportações os três arquivos saíram com o capítulo deslocado (dois repetidos,
+um faltando). A linha 3 de cada CSV diz qual capítulo ele contém de verdade, e
+a linha `"Total"` do rodapé deve bater com a tabela acima.
+
+Os arquivos `sih_residencia_*.csv` (mesma consulta, mas com Coluna = `Não
+ativa`, só o total do período) foram substituídos por estes e não são lidos
+por nenhum notebook.
 
 ### ⚠️ Correção metodológica: residência × internação
 
@@ -163,11 +172,14 @@ pra ler direto com `pd.read_csv`. O parser testado está no notebook 02.
 real cobre Jan/2022-Jul/2026 (os últimos seis meses são provisórios, segundo
 nota do próprio TabNet). `config.PERIODO_SIH` reflete isso.
 
-**Sem quebra por ano:** estes exports trazem o **total acumulado** do período
-(uma única coluna "Internações"), porque a consulta foi feita com Coluna =
-`Não ativa`. Por isso o estudo trabalha com totais por município e não tem
-análise de série temporal. Para recuperá-la, bastaria re-exportar com
-**Coluna = "Ano processamento"** (o resto da seleção é igual).
+**Ano de processamento, não de atendimento:** a coluna de ano é o ano em que
+a AIH foi processada pelo sistema, que pode estar 1-2 meses depois da
+internação de fato. É o padrão do DATASUS e o que mantém consistência com o
+filtro de período (que também é por competência de processamento) — declarar
+no artigo.
+
+**2026 é parcial** (Jan a Jul). Nos gráficos de série temporal entra marcado
+como tal, e fica fora do ajuste de tendência do notebook 05.
 
 **Validação feita:** a soma de cada arquivo bate exatamente com o "Total"
 impresso no rodapé do próprio CSV (350.018 / 108.899 / 29.100), e o

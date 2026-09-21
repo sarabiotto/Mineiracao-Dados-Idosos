@@ -27,7 +27,7 @@ para a origem exata de cada fonte).
 | Fonte | O que fornece | Cobertura |
 |---|---|---|
 | IBGE — Censo 2022 (SIDRA, tabela 9879) | Domicílios com responsável idoso e quantos são unipessoais (idoso mora sozinho), por município | 645/645 municípios |
-| DATASUS — SIH/SUS (TabNet, **por local de residência**) | Internações de idosos por capítulo CID-10, por município, Jan/2022-Jul/2026 | 645/645 municípios |
+| DATASUS — SIH/SUS (TabNet, **por local de residência**) | Internações de idosos por capítulo CID-10, por município **e ano**, Jan/2022-Jul/2026 | 645/645 municípios |
 | Atlas Brasil | IDH municipal (controle) | 259/645 municípios |
 | CadÚnico de Rio Claro (Ofício SMDS nº 2235/2026) | Renda, composição domiciliar (Nível 2) | Só Rio Claro, só famílias de baixa renda |
 
@@ -60,10 +60,10 @@ alta (645/645 no SIH, 259/260 no IDH; ver `FONTES_RIO_CLARO.md`).
    | Notebook | O que faz | Saída |
    |---|---|---|
    | `01_coleta_ibge_censo.ipynb` | Idosos sozinhos por município (Censo 2022, tabela 9879) | `censo_domicilios_sp.csv` |
-   | `02_coleta_datasus_sih.ipynb` | Internações de idosos por capítulo CID-10 (SIH/SUS por residência) | `internacoes_sp.csv` |
-   | `03_integracao_limpeza.ipynb` | Junta tudo por nome de município; gera a base bruta e a base **limpa** | `dataset_municipios_sp_bruto.csv`, `dataset_municipios_sp.csv` |
-   | `04_analise_estatistica.ipynb` | Correlação, regressão, **tabela de robustez** (6 especificações), mapa opcional | figuras + `regressao_ols.txt` + `robustez_especificacoes.csv` |
-   | `05_estudo_caso_rio_claro.ipynb` | Posição de Rio Claro no estado, perfil de causas, CadÚnico | figuras |
+   | `02_coleta_datasus_sih.ipynb` | Internações de idosos por capítulo CID-10 e ano (SIH/SUS por residência) | `internacoes_sp.csv` |
+   | `03_integracao_limpeza.ipynb` | Junta tudo por nome de município; gera o painel, a base bruta e a base **limpa** | `dataset_consolidado_sp.csv`, `dataset_municipios_sp_bruto.csv`, `dataset_municipios_sp.csv` |
+   | `04_analise_estatistica.ipynb` | Correlação, regressão, **tabela de robustez** (6 especificações), série temporal, mapa opcional | figuras + `regressao_ols.txt` + `robustez_especificacoes.csv` |
+   | `05_estudo_caso_rio_claro.ipynb` | Posição de Rio Claro no estado, série e tendência, perfil de causas, CadÚnico | figuras |
 
 ## Três pontos metodológicos importantes
 
@@ -78,14 +78,19 @@ completamente: de ~313 para **645** municípios com ao menos uma internação
 (Pariquera-Açu estava 7x inflada; Poá e Peruíbe apareciam com zero).
 **Reportar essa correção na Metodologia do artigo.**
 
-### 2. Uma linha por município (notebook 03)
+### 2. A hipótese é testada por município, não no painel (notebook 03)
 
-`pct_idosos_sozinhos` vem do Censo 2022 e é constante no tempo. Testar a
-hipótese num painel por ano inflaria o "n" artificialmente
-([pseudorreplicação](https://en.wikipedia.org/wiki/Pseudoreplication)) sem
-acrescentar informação. Além disso, os exports atuais do TabNet trazem o
-total do período, sem quebra anual — por isso não há análise de série
-temporal (para tê-la, re-exportar com Coluna = "Ano processamento").
+O pipeline gera as duas coisas: o **painel** município × ano (3.225 linhas,
+para os gráficos de evolução) e a base **por município** (645 linhas, totais
+do período). A hipótese é testada só na segunda, porque
+`pct_idosos_sozinhos` vem do Censo 2022 e é constante ao longo dos 5 anos:
+rodar a regressão no painel repetiria cada município 5 vezes sem acrescentar
+informação nenhuma, inflando o "n" e os níveis de significância junto
+([pseudorreplicação](https://en.wikipedia.org/wiki/Pseudoreplication)).
+
+⚠️ **2026 é parcial** (Jan-Jul). Nos gráficos de série aparece pontilhado, e
+fica fora do ajuste de tendência do notebook 05 — senão a reta cairia
+artificialmente no último ponto.
 
 ### 3. Limpeza (notebook 03, seção 3.3)
 
@@ -129,6 +134,13 @@ medindo o padrão *entre as grandes cidades*. Testamos formalmente se a
 associação muda conforme o porte (termo de interação, seção 4.4b): **não é
 significativo** (p=0,49), então não dá para afirmar moderação por porte.
 
+**Tendência temporal (notebook 04, seção 4.5):** a taxa de internação de
+idosos vem **subindo de forma consistente** no estado — mediana de 2.263 por
+100 mil domicílios em 2022 para 3.030 em 2025, alta de ~34% em três anos.
+Rio Claro acompanha a tendência (+215 por 100 mil ao ano), partindo de um
+patamar bem mais baixo. Isso é descritivo, não teste de hipótese, mas dá um
+argumento de relevância forte para a Introdução do artigo.
+
 **Leitura honesta:** há evidência **fraca e na direção prevista**, sensível à
 forma de modelar. É bem diferente do resultado com o dado errado (por local
 de internação), onde não havia associação nenhuma (r=0,037; p=0,565) — mas
@@ -143,11 +155,9 @@ algo sair diferente do esperado, me manda a mensagem completa (ou o que
 apareceu na tela) que eu ajusto com base nisso.
 
 Melhorias possíveis, em ordem de impacto:
-1. **Re-exportar o SIH com Coluna = "Ano processamento"** — devolve a análise
-   temporal (evolução da taxa, tendência de Rio Claro)
-2. **Completar o IDH** para os ~386 municípios que faltam — hoje a análise
+1. **Completar o IDH** para os ~386 municípios que faltam — hoje a análise
    principal perde 60% da amostra por isso
-3. **Microdados via `pysus`** (notebook 02, seção 2.3) — permitiria usar a
+2. **Microdados via `pysus`** (notebook 02, seção 2.3) — permitiria usar a
    subcategoria exata da CID-10 (W00-W19 para quedas) em vez do capítulo
    inteiro. Só roda localmente, fora deste ambiente
 
@@ -182,7 +192,11 @@ outputs/
   `config.CAUSAS_SIH`. O capítulo V (transtornos mentais) é o mais largo:
   tratar como complementar, não como pilar do argumento.
 - O recorte temporal do SIH é Jan/2022-Jul/2026 (últimos seis meses
-  provisórios), não 2019-2022 como no plano original.
+  provisórios), não 2019-2022 como no plano original. **2026 está incompleto**
+  (até julho) e não deve ser comparado de igual para igual com os anos cheios.
+- O ano das internações é o de **processamento** da AIH, não o de atendimento
+  (é o padrão do DATASUS e o que mantém consistência com o filtro de período)
+  — pode haver defasagem de 1-2 meses em relação à internação de fato.
 - O IDH cobre 259 dos 645 municípios, e é o IDHM 2010 (o Censo 2022 ainda não
   tem IDHM publicado) — depois da limpeza, a análise principal roda com n=250.
 - **Rio Claro não é um caso extremo:** tem proporção de idosos sozinhos

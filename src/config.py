@@ -78,11 +78,13 @@ def normalizar_municipio(nome: str) -> str:
 # publicado e os últimos seis meses são provisórios (sujeitos a atualização,
 # conforme nota do próprio TabNet).
 #
-# Os arquivos atuais trazem o TOTAL acumulado do período (uma coluna
-# "Internações"), sem quebra por ano — por isso o pipeline trabalha com
-# totais por município, não com série temporal.
+# Os exports trazem uma coluna por ano (TabNet com Coluna = "Ano
+# processamento"). 2026 cobre só até julho, então entra nos gráficos de
+# série temporal marcado como parcial e fica fora do ajuste de tendência.
 # ---------------------------------------------------------------------------
 PERIODO_SIH = "Jan/2022-Jul/2026"   # recorte coberto pelos exports do TabNet
+ANOS_SIH = [2022, 2023, 2024, 2025, 2026]
+ANO_SIH_PARCIAL = 2026              # só até julho -- não comparar de igual para igual com os anos cheios
 ANO_CENSO = 2022                    # ano do Censo Demográfico usado como referência
 
 # Estatuto do Idoso (Lei 10.741/2003), art. 1º
